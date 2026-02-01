@@ -432,6 +432,108 @@
             pointer-events: none;
             z-index: 1000;
         }
+
+        /* History Section */
+        .history-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: none;
+        }
+
+        .history-section.show {
+            display: block;
+        }
+
+        .history-section h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--light);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-date {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .history-score {
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .history-score.high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .history-score.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .history-score.low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .welcome-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .welcome-back strong {
+            font-size: 1.1em;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .loading-history {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -466,9 +568,18 @@
         <!-- Login Section -->
         <div class="login-section" id="loginSection">
             <h2>Enter Your Student ID</h2>
-            <input type="text" id="studentIdInput" placeholder="123456789" maxlength="15">
+            <input type="text" id="studentIdInput" placeholder="123456789" maxlength="15" onkeyup="checkStudentHistory(event)">
             <p class="hint">Numbers only - no letters from your email</p>
             <button class="btn btn-primary" onclick="startPractice()">Start Practice</button>
+
+            <div class="history-section" id="historySection">
+                <div class="welcome-back" id="welcomeBack">
+                    <strong>Welcome back!</strong>
+                    <div class="stats-row" id="statsRow"></div>
+                </div>
+                <h3>📊 Your Practice History</h3>
+                <div class="history-list" id="historyList"></div>
+            </div>
         </div>
 
         <!-- Quiz Section -->
@@ -673,6 +784,115 @@
         let score = 0;
         let responses = [];
         let shuffledQuestions = [];
+        let studentHistory = null;
+        let historyCheckTimeout = null;
+
+        // Check for student history when typing ID
+        function checkStudentHistory(event) {
+            const studentId = document.getElementById('studentIdInput').value.trim();
+
+            // Clear previous timeout
+            if (historyCheckTimeout) clearTimeout(historyCheckTimeout);
+
+            // Hide history if ID is too short
+            if (studentId.length < 5) {
+                document.getElementById('historySection').classList.remove('show');
+                studentHistory = null;
+                return;
+            }
+
+            // Start practice on Enter
+            if (event && event.key === 'Enter') {
+                startPractice();
+                return;
+            }
+
+            // Debounce - wait 500ms after typing stops
+            historyCheckTimeout = setTimeout(() => loadStudentHistory(studentId), 500);
+        }
+
+        async function loadStudentHistory(studentId) {
+            try {
+                const response = await fetch(`/.netlify/functions/progress?studentId=${encodeURIComponent(studentId)}`);
+                const data = await response.json();
+
+                if (data.attempts && data.attempts.length > 0) {
+                    studentHistory = data;
+                    displayHistory(data);
+                } else {
+                    document.getElementById('historySection').classList.remove('show');
+                    studentHistory = null;
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('historySection').classList.remove('show');
+            }
+        }
+
+        function displayHistory(data) {
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+            const statsRow = document.getElementById('statsRow');
+
+            // Calculate stats
+            const totalAttempts = data.attempts.length;
+            const avgScore = Math.round(data.attempts.reduce((sum, a) => sum + a.percentage, 0) / totalAttempts);
+            const bestScore = Math.max(...data.attempts.map(a => a.percentage));
+
+            // Display stats
+            statsRow.innerHTML = `
+                <span class="stat-badge">${totalAttempts} attempt${totalAttempts > 1 ? 's' : ''}</span>
+                <span class="stat-badge">Avg: ${avgScore}%</span>
+                <span class="stat-badge">Best: ${bestScore}%</span>
+            `;
+
+            // Display history list
+            let historyHtml = '';
+            data.attempts.slice(0, 10).forEach(attempt => {
+                const date = new Date(attempt.timestamp);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const scoreClass = attempt.percentage >= 80 ? 'high' : attempt.percentage >= 60 ? 'medium' : 'low';
+
+                historyHtml += `
+                    <div class="history-item">
+                        <span class="history-date">${dateStr}</span>
+                        <span class="history-score ${scoreClass}">${attempt.score}/${attempt.total} (${attempt.percentage}%)</span>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = historyHtml;
+
+            historySection.classList.add('show');
+        }
+
+        async function saveProgress() {
+            if (!currentUser?.studentId) return;
+
+            const percentage = Math.round((score / shuffledQuestions.length) * 100);
+
+            try {
+                await fetch('/.netlify/functions/progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: currentUser.studentId,
+                        attempt: {
+                            score: score,
+                            total: shuffledQuestions.length,
+                            percentage: percentage,
+                            responses: responses.map(r => ({
+                                sentence: r.sentence.substring(0, 50) + '...',
+                                correct: r.correct,
+                                selected: r.selected,
+                                isCorrect: r.isCorrect
+                            }))
+                        }
+                    })
+                });
+            } catch (error) {
+                console.error('Error saving progress:', error);
+            }
+        }
 
         function shuffleArray(array) {
             const newArray = [...array];
@@ -826,6 +1046,9 @@
             document.getElementById('quizSection').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'block';
 
+            // Save progress to server
+            saveProgress();
+
             const percentage = Math.round((score / shuffledQuestions.length) * 100);
             document.getElementById('scoreDisplay').textContent = percentage + '%';
             document.getElementById('correctCount').textContent = score;
@@ -847,6 +1070,12 @@
         function restartPractice() {
             document.getElementById('resultsSection').style.display = 'none';
             document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('historySection').classList.remove('show');
+            // Reload history for current user
+            if (currentUser?.studentId) {
+                document.getElementById('studentIdInput').value = currentUser.studentId;
+                loadStudentHistory(currentUser.studentId);
+            }
         }
 
         function downloadPDF() {
