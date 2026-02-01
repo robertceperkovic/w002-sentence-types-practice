@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>W002 Sentence Types Practice</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --bg: #f5f7fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), #2980b9);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .info-box h3 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sentence-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .type-card {
+            background: var(--light);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .type-card strong {
+            color: var(--dark);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .type-card span {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        /* Login Section */
+        .login-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .login-section h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
+
+        .login-section input {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .login-section input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-section .hint {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        /* Quiz Section */
+        .quiz-section {
+            display: none;
+        }
+
+        .progress-bar {
+            background: #ddd;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .question-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .question-number {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            color: var(--dark);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .sentence-highlight {
+            background: #fff3cd;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--warning);
+            font-style: italic;
+            margin: 15px 0;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 15px 20px;
+            background: var(--light);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.05em;
+        }
+
+        .option:hover:not(.disabled) {
+            background: #e8f4fc;
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: #e8f4fc;
+            border-color: var(--primary);
+        }
+
+        .option.correct {
+            background: #d4edda;
+            border-color: var(--success);
+        }
+
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: var(--danger);
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .feedback {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .explanation {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid var(--primary);
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+            text-align: center;
+        }
+
+        .results-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .score-display {
+            font-size: 4em;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .score-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .score-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .score-item .number {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .score-item .label {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .review-list {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .review-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--danger);
+        }
+
+        .review-item.correct {
+            border-left-color: var(--success);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            margin-top: 20px;
+        }
+
+        .btn-download:hover {
+            background: linear-gradient(135deg, #219a52, #27ae60);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.4em;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .score-display {
+                font-size: 3em;
+            }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>W002 Sentence Types Practice</h1>
+            <p>Simple, Compound, Complex, Compound-Complex</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📚 Quick Reference</h3>
+            <div class="sentence-types">
+                <div class="type-card">
+                    <strong>Simple</strong>
+                    <span>One independent clause</span>
+                </div>
+                <div class="type-card">
+                    <strong>Compound</strong>
+                    <span>Two+ independent clauses (and, but, so, or, yet)</span>
+                </div>
+                <div class="type-card">
+                    <strong>Complex</strong>
+                    <span>Independent + dependent clause (because, although, if, when, who, that)</span>
+                </div>
+                <div class="type-card">
+                    <strong>Compound-Complex</strong>
+                    <span>Two+ independent + dependent clause</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <h2>Enter Your Student ID</h2>
+            <input type="text" id="studentIdInput" placeholder="123456789" maxlength="15">
+            <p class="hint">Numbers only - no letters from your email</p>
+            <button class="btn btn-primary" onclick="startPractice()">Start Practice</button>
+        </div>
+
+        <!-- Quiz Section -->
+        <div class="quiz-section" id="quizSection">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="questionNumber">Question 1 of 20</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="sentence-highlight" id="sentenceHighlight"></div>
+                <div class="options" id="optionsContainer"></div>
+                <div class="feedback" id="feedback"></div>
+                <div class="explanation" id="explanation"></div>
+                <div class="actions">
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Next Question →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-card">
+                <h2>🎉 Practice Complete!</h2>
+                <div class="score-display" id="scoreDisplay">0%</div>
+                <div class="score-breakdown">
+                    <div class="score-item">
+                        <div class="number" id="correctCount">0</div>
+                        <div class="label">Correct</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="number" id="incorrectCount">0</div>
+                        <div class="label">Incorrect</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="number" id="totalQuestions">20</div>
+                        <div class="label">Total</div>
+                    </div>
+                </div>
+                <div class="actions" style="justify-content: center;">
+                    <button class="btn btn-primary" onclick="restartPractice()">🔄 Try Again</button>
+                    <button class="btn btn-download" onclick="downloadPDF()">📄 Download PDF Report</button>
+                </div>
+                <div class="review-list" id="reviewList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Questions with minor modifications for practice
+        const questions = [
+            {
+                sentence: "Since my siblings have WiFi at home, they complete their assignments online quite easily.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. It has a dependent clause starting with 'Since' (subordinating conjunction) and one independent clause."
+            },
+            {
+                sentence: "Many believe that buying from local shops is outdated, so they prefer online shopping.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. It has two independent clauses joined by 'so' (coordinating conjunction FANBOYS)."
+            },
+            {
+                sentence: "Frequent absences from class typically result in poor academic performance.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. It has only one independent clause with a single subject and predicate."
+            },
+            {
+                sentence: "Many individuals consume excessive amounts of junk food nowadays.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. It contains one independent clause with one subject-verb combination."
+            },
+            {
+                sentence: "The guidelines for your assignment are posted on the course website.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. One independent clause with a simple subject and predicate."
+            },
+            {
+                sentence: "Students require an IELTS score of at least 5.5, or they must enroll in preparatory courses.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses connected by 'or' (coordinating conjunction)."
+            },
+            {
+                sentence: "Even though we looked everywhere, my father couldn't locate his car keys.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. 'Even though' introduces a dependent clause, followed by an independent clause."
+            },
+            {
+                sentence: "Numerous people work extremely hard for their income, but they still struggle financially.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses joined by 'but' (coordinating conjunction)."
+            },
+            {
+                sentence: "While pursuing an Engineering degree is challenging, Ahmed and Omar both attend summer sessions, so they can complete their studies sooner.",
+                correct: "compound-complex",
+                explanation: "This is a COMPOUND-COMPLEX sentence. It has a dependent clause ('While...') and two independent clauses joined by 'so'."
+            },
+            {
+                sentence: "The online learning workshops appear beneficial and engaging, but participants must cover the costs.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses connected by 'but'."
+            },
+            {
+                sentence: "University engineering students are involved in developing electric vehicles for racing and commuting.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. One independent clause with compound objects but a single main verb."
+            },
+            {
+                sentence: "My leg was severely injured in the traffic accident last month, so I couldn't take the exam.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses joined by 'so'."
+            },
+            {
+                sentence: "We have raised some funds, and we plan to give them to those in need.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses connected by 'and'."
+            },
+            {
+                sentence: "My family and colleagues encourage me to pursue a career in healthcare.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. Compound subject but one independent clause with a single predicate."
+            },
+            {
+                sentence: "If you wish to visit the shopping center, you will need to take the main highway.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. 'If' introduces a dependent clause, followed by an independent clause."
+            },
+            {
+                sentence: "The physician advised me to stay home because I have a throat infection.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. Independent clause followed by a dependent clause starting with 'because'."
+            },
+            {
+                sentence: "Tobacco use raises the likelihood of cardiovascular disease and respiratory cancer.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. One subject with compound objects but a single predicate."
+            },
+            {
+                sentence: "Every student at the university takes the placement examination.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. One independent clause with a single subject and verb."
+            },
+            {
+                sentence: "The engineering students built a robot, and they demonstrated it at the symposium.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses joined by 'and'."
+            },
+            {
+                sentence: "Because the laboratory was unavailable, we had to complete the experiment elsewhere.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. Dependent clause with 'Because' followed by an independent clause."
+            },
+            {
+                sentence: "The sun appears in the east and disappears in the west.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. One subject with compound predicates - still just one independent clause."
+            },
+            {
+                sentence: "I intended to purchase a new computer, but I chose to save my money instead.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses connected by 'but'."
+            },
+            {
+                sentence: "Despite the heavy downpour, the soccer game proceeded, and the spectators remained to observe.",
+                correct: "compound-complex",
+                explanation: "This is a COMPOUND-COMPLEX sentence. It has a dependent clause ('Despite...') and two independent clauses joined by 'and'."
+            },
+            {
+                sentence: "The instructor who teaches Science has extensive experience.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. It contains an embedded relative clause 'who teaches Science' (dependent) within the independent clause."
+            },
+            {
+                sentence: "Academic life can be demanding, yet it is also highly fulfilling.",
+                correct: "compound",
+                explanation: "This is a COMPOUND sentence. Two independent clauses joined by 'yet' (coordinating conjunction)."
+            },
+            {
+                sentence: "While I was reading in the study area, my phone buzzed, so I had to step outside.",
+                correct: "compound-complex",
+                explanation: "This is a COMPOUND-COMPLEX sentence. Dependent clause ('While...') plus two independent clauses joined by 'so'."
+            },
+            {
+                sentence: "To excel in this subject, you must participate in all the sessions.",
+                correct: "simple",
+                explanation: "This is a SIMPLE sentence. The infinitive phrase 'To excel...' is not a clause - just one independent clause."
+            },
+            {
+                sentence: "If you turn in the work late, marks will be subtracted.",
+                correct: "complex",
+                explanation: "This is a COMPLEX sentence. 'If' introduces a dependent clause, followed by an independent clause."
+            }
+        ];
+
+        let currentUser = null;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let responses = [];
+        let shuffledQuestions = [];
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function startPractice() {
+            const studentId = document.getElementById('studentIdInput').value.trim();
+            if (studentId.length < 3) {
+                alert('Please enter a valid Student ID');
+                return;
+            }
+
+            currentUser = { studentId };
+            currentQuestionIndex = 0;
+            score = 0;
+            responses = [];
+            shuffledQuestions = shuffleArray(questions).slice(0, 20);
+
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = shuffledQuestions[currentQuestionIndex];
+
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestionIndex + 1} of ${shuffledQuestions.length}`;
+            document.getElementById('questionText').textContent = 'Identify the type of sentence:';
+            document.getElementById('sentenceHighlight').textContent = `"${q.sentence}"`;
+
+            const options = ['simple', 'compound', 'complex', 'compound-complex'];
+            const shuffledOptions = shuffleArray(options);
+
+            let optionsHtml = '';
+            shuffledOptions.forEach((opt, i) => {
+                optionsHtml += `<div class="option" onclick="selectAnswer('${opt}')">${opt.charAt(0).toUpperCase() + opt.slice(1)}</div>`;
+            });
+            document.getElementById('optionsContainer').innerHTML = optionsHtml;
+
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('explanation').className = 'explanation';
+            document.getElementById('nextBtn').disabled = true;
+
+            updateProgress();
+        }
+
+        function selectAnswer(selected) {
+            const q = shuffledQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            const isCorrect = selected.toLowerCase() === q.correct.toLowerCase();
+
+            options.forEach(opt => {
+                opt.classList.add('disabled');
+                const optText = opt.textContent.toLowerCase();
+                if (optText === q.correct.toLowerCase()) {
+                    opt.classList.add('correct');
+                }
+                if (optText === selected.toLowerCase() && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            const feedback = document.getElementById('feedback');
+            if (isCorrect) {
+                score++;
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '✅ Correct!';
+                triggerConfetti();
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `❌ Incorrect. The correct answer is <strong>${q.correct}</strong>.`;
+            }
+
+            document.getElementById('explanation').textContent = q.explanation;
+            document.getElementById('explanation').className = 'explanation show';
+
+            responses.push({
+                sentence: q.sentence,
+                selected: selected,
+                correct: q.correct,
+                isCorrect: isCorrect,
+                explanation: q.explanation
+            });
+
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex) / shuffledQuestions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function showResults() {
+            document.getElementById('quizSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+
+            const percentage = Math.round((score / shuffledQuestions.length) * 100);
+            document.getElementById('scoreDisplay').textContent = percentage + '%';
+            document.getElementById('correctCount').textContent = score;
+            document.getElementById('incorrectCount').textContent = shuffledQuestions.length - score;
+            document.getElementById('totalQuestions').textContent = shuffledQuestions.length;
+
+            let reviewHtml = '<h3 style="margin-bottom: 15px;">📝 Review Your Answers</h3>';
+            responses.forEach((r, i) => {
+                reviewHtml += `
+                    <div class="review-item ${r.isCorrect ? 'correct' : ''}">
+                        <strong>Q${i + 1}:</strong> "${r.sentence}"<br>
+                        <small>Your answer: <strong>${r.selected}</strong> | Correct: <strong>${r.correct}</strong></small>
+                    </div>
+                `;
+            });
+            document.getElementById('reviewList').innerHTML = reviewHtml;
+        }
+
+        function restartPractice() {
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+        }
+
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 15;
+
+            // Header
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('W002 Sentence Types Practice - Review Sheet', pageWidth / 2, y, { align: 'center' });
+
+            y += 10;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            doc.text(`Student ID: ${currentUser?.studentId || 'N/A'} | Date: ${dateStr}`, pageWidth / 2, y, { align: 'center' });
+
+            // Score
+            y += 12;
+            const percentage = Math.round((score / shuffledQuestions.length) * 100);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Score: ${score}/${shuffledQuestions.length} (${percentage}%)`, pageWidth / 2, y, { align: 'center' });
+
+            // Questions
+            y += 15;
+            doc.setFontSize(10);
+
+            responses.forEach((r, i) => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 15;
+                }
+
+                const status = r.isCorrect ? '[OK]' : '[X]';
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Q${i + 1} ${status}`, 15, y);
+
+                y += 5;
+                doc.setFont('helvetica', 'normal');
+                const sentenceLines = doc.splitTextToSize(`"${r.sentence}"`, pageWidth - 30);
+                doc.text(sentenceLines, 15, y);
+                y += sentenceLines.length * 4 + 2;
+
+                doc.setFontSize(9);
+                doc.text(`Your answer: ${r.selected} | Correct: ${r.correct}`, 15, y);
+                y += 8;
+                doc.setFontSize(10);
+            });
+
+            // Footer
+            y += 5;
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('W002 Sentence Types Practice | Use this sheet to review before your exam.', pageWidth / 2, y, { align: 'center' });
+
+            doc.save(`W002_SentenceTypes_${currentUser?.studentId || 'student'}.pdf`);
+            alert('PDF Downloaded! Save this file to your classwork folder for exam review.');
+        }
+
+        function triggerConfetti() {
+            for (let i = 0; i < 30; i++) {
+                createConfetti();
+            }
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-10px';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.background = ['#f39c12', '#27ae60', '#3498db', '#e74c3c', '#9b59b6'][Math.floor(Math.random() * 5)];
+            confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+            document.body.appendChild(confetti);
+
+            const animation = confetti.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(100vh) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+            ], {
+                duration: 2000 + Math.random() * 1000,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            });
+
+            animation.onfinish = () => confetti.remove();
+        }
+    </script>
+</body>
+</html>
