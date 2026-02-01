@@ -252,6 +252,51 @@
             display: block;
         }
 
+        .ai-feedback {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .ai-feedback.show {
+            display: block;
+        }
+
+        .ai-feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .ai-feedback-content {
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .ai-feedback.loading .ai-feedback-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .btn {
             padding: 12px 30px;
             font-size: 1em;
@@ -439,6 +484,10 @@
                 <div class="options" id="optionsContainer"></div>
                 <div class="feedback" id="feedback"></div>
                 <div class="explanation" id="explanation"></div>
+                <div class="ai-feedback" id="aiFeedback">
+                    <div class="ai-feedback-header">🤖 AI Tutor Feedback</div>
+                    <div class="ai-feedback-content" id="aiFeedbackContent"></div>
+                </div>
                 <div class="actions">
                     <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Next Question →</button>
                 </div>
@@ -673,6 +722,8 @@
             document.getElementById('feedback').className = 'feedback';
             document.getElementById('feedback').textContent = '';
             document.getElementById('explanation').className = 'explanation';
+            document.getElementById('aiFeedback').className = 'ai-feedback';
+            document.getElementById('aiFeedbackContent').textContent = '';
             document.getElementById('nextBtn').disabled = true;
 
             updateProgress();
@@ -708,6 +759,9 @@
             document.getElementById('explanation').textContent = q.explanation;
             document.getElementById('explanation').className = 'explanation show';
 
+            // Fetch AI feedback
+            fetchAIFeedback(q.sentence, q.correct, selected, isCorrect);
+
             responses.push({
                 sentence: q.sentence,
                 selected: selected,
@@ -717,6 +771,41 @@
             });
 
             document.getElementById('nextBtn').disabled = false;
+        }
+
+        async function fetchAIFeedback(sentence, correctAnswer, studentAnswer, isCorrect) {
+            const aiFeedback = document.getElementById('aiFeedback');
+            const aiFeedbackContent = document.getElementById('aiFeedbackContent');
+
+            // Show loading state
+            aiFeedback.className = 'ai-feedback show loading';
+            aiFeedbackContent.innerHTML = '<div class="loading-spinner"></div> Getting personalized feedback...';
+
+            try {
+                const response = await fetch('/.netlify/functions/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: sentence,
+                        correctAnswer: correctAnswer,
+                        studentAnswer: studentAnswer,
+                        isCorrect: isCorrect,
+                        sentenceType: correctAnswer
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.feedback) {
+                    aiFeedback.className = 'ai-feedback show';
+                    aiFeedbackContent.textContent = data.feedback;
+                } else {
+                    aiFeedback.className = 'ai-feedback';
+                }
+            } catch (error) {
+                console.error('AI feedback error:', error);
+                aiFeedback.className = 'ai-feedback';
+            }
         }
 
         function nextQuestion() {
